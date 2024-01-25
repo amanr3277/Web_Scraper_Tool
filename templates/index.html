@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>Scrape Data UI</title>
+      <!-- jQuery -->
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <!-- Latest Bootstrap CSS -->
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Latest Bootstrap JS and Popper.js -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.11.6/umd/popper.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+      <!-- FileSaver.js -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+      <!-- xlsx-style Library -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.16.2/xlsx.full.min.js"></script>
+      <!-- Blob Library -->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/blob-util/2.0.2/blob-util.min.js"></script>
+      <link href="https://db.onlinewebfonts.com/c/3d5f94badc5c3a15e620a9da9089b726?family=Magistral+Cond+W08+Medium" rel="stylesheet">
+      <style>
+         .container {
+         width: 550px;
+         border: 1px solid grey;
+         height: 25rem;
+         display: flex;
+         flex-direction: column;
+         justify-content: center;
+         border-radius: 25px;
+         background-color: orange;
+         align-items: center;
+         -webkit-box-shadow: -1px 1px 36px -12px rgba(0, 0, 0, 0.75);
+         -moz-box-shadow: -1px 1px 36px -12px rgba(0, 0, 0, 0.75);
+         box-shadow: -1px 1px 36px -12px rgba(0, 0, 0, 0.75);
+         position: relative;
+         top: -80px;
+         }
+         .img-fluid {
+         margin: 2rem;
+         width: 2rem;
+         }
+         .form-check-input {
+         border: 2px solid black;
+         margin-left: 5px;
+         }
+         .outer {
+         background-color: grey;
+         height: 43.45rem;
+         }
+         input {
+         margin-left: 5px;
+         }
+         .rgf {
+         font-family: "Magistral Cond W08 Medium";
+         }
+      </style>
+   </head>
+   <body>
+      <div class="outer">
+         <img src="RG_Logo.png" alt="Logo" class="img-fluid" style="width: 135px; height: 135px;">
+         <div class="container mt-5 container">
+            <div class="row align-items-center">
+               <!-- Logo in the left corner -->
+               <div class="col-md-2"></div>
+               <!-- Web Scraping Heading -->
+               <div class="col-md-8 text-center">
+                  <h1 class="rgf">Web Scraper</h1>
+               </div>
+               <br>
+               <div class="row mt-3 justify-content-center">
+                  <div class="col-md-12 text-center">
+                     <div class="input-group mb-4 justify-content-center">
+                        <input type="text" class="form-control justify-content-center rgf" id="urlInput" placeholder="Enter URL"
+                           aria-label="Search" aria-describedby="basic-addon2">
+                     </div>
+                     <h5 class="rgf">Select specific data to scrape:</h5>
+                  </div>
+               </div>
+            </div>
+            <div class="modal fade" id="promptModal" tabindex="-1" role="dialog" aria-hidden="true">
+               <div class="modal-dialog modal-dialog-centered" role="document">
+                  <div class="modal-content">
+                     <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLongTitle">Download Options</h5>
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                     </div>
+                     <div class="modal-body">
+                        <label for="fileTypeSelector" class="rgf">Select file type:</label>
+                        <select id="fileTypeSelector" class="form-control">
+                           <option value="json" class="rgf">.JSON (JavaScript Object Notation)</option>
+                           <option value="csv" class="rgf">.CSV (Comma Separated Values)</option>
+                           <option value="xlsx" class="rgf">.XLSX (Microsoft Excel Sheet)</option>
+                        </select>
+                     </div>
+                     <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rgf" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary rgf" onclick="downloadScrapedData()">Download Now</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="modal" id="completionModal" tabindex="-1" role="dialog" aria-labelledby="completionModalLabel" aria-hidden="true">
+               <div class="modal-dialog">
+                  <div class="modal-content">
+                     <div class="modal-header">
+                        <h5 class="modal-title rgf" id="completionModalLabel">Scraping Completed!!</h5>
+                     </div>
+                     <div class="modal-body">
+                        <p id="completionMessage" class="rgf">Total Blog Posts Scraped: <span id="totalBlogPosts" class="rgf"></span></p>
+                     </div>
+                     <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rgf" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary rgf" data-bs-toggle="modal" onclick="openJsonModal()" data-bs-target="#jsonviewModal">View Scraped data</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <div class="modal fade" id="jsonviewModal" tabindex="-1" aria-labelledby="jsonModalLabel" aria-hidden="true">
+               <div class="modal-dialog modal-dialog-centered modal-lg">
+                  <div class="modal-content">
+                     <div class="modal-header">
+                        <h5 class="modal-title rgf" id="jsonModalLabel">Scraped Data Viewer</h5>
+                     </div>
+                     <div class="modal-body">
+                        <div id="jsonTableContainer" class="table-responsive"></div>
+                     </div>
+                     <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary rgf" data-bs-dismiss="modal">Close</button>
+                     </div>
+                  </div>
+               </div>
+            </div>
+            <!-- Checkboxes Row 1 -->
+            <div class="row justify-content-center">
+               <div class="col-md-5">
+                  <div class="mb-3 form-check text-start checkbox-pair">
+                     <input type="checkbox" class="form-check-input" id="blogTitleCheckbox">
+                     <label class="form-check-label rgf" for="blogTitleCheckbox" style="margin-left: 5px;">Blog
+                     Title</label>
+                  </div>
+                  <div class="mb-3 form-check text-start checkbox-pair">
+                     <input type="checkbox" class="form-check-input rgf" id="blogDateCheckbox">
+                     <label class="form-check-label rgf" for="blogDateCheckbox"
+                        style="margin-left: 5px;">Blog Date</label>
+                  </div>
+               </div>
+               <div class="col-md-6">
+                  <div class="mb-3 form-check text-start checkbox-pair">
+                     <input type="checkbox" class="form-check-input rgf" id="blogImageUrlCheckbox">
+                     <label class="form-check-label rgf" for="blogImageUrlCheckbox"
+                        style="margin-left: 5px;">Blog Image URL</label>
+                  </div>
+                  <div class="mb-3 form-check text-start checkbox-pair">
+                     <input type="checkbox" class="form-check-input rgf" id="blogLikesCountCheckbox">
+                     <label class="form-check-label rgf" for="blogLikesCountCheckbox"
+                        style="margin-left: 5px;">Blog Likes Count</label>
+                  </div>
+               </div>
+            </div>
+            <!-- Large Button Row -->
+            <div class="row justify-content-center">
+               <div class="col-md-12 text-center">
+                  <button type="button" class="btn btn-lg btn-dark rgf" onclick="scrapeData()">
+                  <span class="spinner-border spinner-border-sm d-none" id="spinner" role="status"
+                     aria-hidden="true"></span>
+                  Scrape Data from URL
+                  </button>
+                  <button type="button" class="btn btn-lg btn-success rgf" data-bs-toggle="modal" data-bs-target="#promptModal">Download Data</button>
+               </div>
+            </div>
+         </div>
+      </div>
+      <script>
+         let scrapedData; // Variable to store scraped data
+         
+         function scrapeData() {
+             // Show the spinner while scraping
+             document.getElementById('spinner').classList.remove('d-none');
+         
+             // Get values from the UI
+             const baseUrl = encodeURIComponent(document.getElementById('urlInput').value);
+             const blogDate = document.getElementById('blogDateCheckbox').checked;
+             const blogTitle = document.getElementById('blogTitleCheckbox').checked;
+             const blogImageUrl = document.getElementById('blogImageUrlCheckbox').checked;
+             const blogLikesCount = document.getElementById('blogLikesCountCheckbox').checked;
+         
+             // Construct the API URL
+             let apiUrl = `http://192.168.29.193:5000/get_blog_data?base_url=${baseUrl}`;
+         
+             // Append query parameters based on checkbox state
+             if (blogDate) {
+                 apiUrl += '&blog_date=true';
+             }
+         
+             if (blogTitle) {
+                 apiUrl += '&blog_title=true';
+             }
+         
+             if (blogImageUrl) {
+                 apiUrl += '&blog_image_url=true';
+             }
+         
+             if (blogLikesCount) {
+                 apiUrl += '&blog_likes_count=true';
+             }
+         
+             // Make an AJAX request to the API
+             fetch(apiUrl)
+                 .then(response => response.json())
+                 .then(data => {
+         
+                     // Hide the spinner after scraping is done
+                     document.getElementById('spinner').classList.add('d-none');
+         
+                     scrapedData = removeNulls(JSON.stringify(data, null, 2));
+         
+                     // Display completion message with the total number of blog posts scraped in Bootstrap modal
+                     const totalBlogPosts = data.length;
+                     document.getElementById('totalBlogPosts').innerText = totalBlogPosts;
+                     $('#completionModal').modal('show');
+         
+                 })
+                 .catch(error => {
+                     console.error('Error fetching data:', error);
+                     // Hide the spinner in case of an error
+                     document.getElementById('spinner').classList.add('d-none');
+                 });
+         }
+         
+         function removeNulls(jsonString) {
+                 try {
+                     const jsonArray = JSON.parse(jsonString);
+         
+                     const processObject = (jsonObj) => {
+                         return Object.fromEntries(
+                             Object.entries(jsonObj).filter(([key, value]) => value !== null)
+                         );
+                     };
+         
+                     const resultArray = jsonArray.map(processObject);
+         
+                     return JSON.stringify(resultArray, null, 2);
+                 } catch (error) {
+                     console.error('Error parsing JSON:', error);
+                     return 'Error parsing JSON';
+                 }
+             }
+         
+         
+         function downloadScrapedData() {
+             const fileFormat =  document.getElementById('fileTypeSelector').value;      
+             const blob = new Blob([scrapedData], { type: 'application/json' });
+         
+             if (fileFormat === 'json') {
+                 saveAs(blob, 'scraped_data.json');
+             } else if (fileFormat === 'csv') {
+                 // Convert JSON to CSV
+                 const json = JSON.parse(scrapedData);
+                 const csv = convertToCSV(json);
+                 const csvBlob = new Blob([csv], { type: 'text/csv' });
+                 saveAs(csvBlob, 'scraped_data.csv');
+             } else if (fileFormat === 'xlsx') {
+                 // Convert JSON to XLSX
+                 const json = JSON.parse(scrapedData);
+                 const jsonDataObject = eval(json);
+                 convertToXLSX(jsonDataObject);
+             }
+         }
+         
+         function convertToCSV(json) {
+             const items = json.map(item => Object.values(item));
+             const header = Object.keys(json[0]);
+             items.unshift(header);
+             return items.map(item => item.join(',')).join('\n');
+         }
+         
+         function convertToXLSX(jsonObject) {
+         var myFile = "scraped_data.xlsx";
+         var myWorkSheet = XLSX.utils.json_to_sheet(jsonObject);
+         var myWorkBook = XLSX.utils.book_new();
+         XLSX.utils.book_append_sheet(myWorkBook, myWorkSheet, "myWorkSheet");
+         XLSX.writeFile(myWorkBook, myFile);
+         }
+         function openJsonModal() {
+         renderJsonTable(scrapedData);
+         var jsonModal = new bootstrap.Modal(document.getElementById('jsonModal'));
+         jsonModal.show();
+         }
+         function renderJsonTable(jsonString) {
+         try {
+           var jsonData = JSON.parse(jsonString);
+           
+           // Create a table element
+           var table = document.createElement('table');
+           table.className = 'table table-bordered';
+         
+           // Create table header
+           var thead = document.createElement('thead');
+           var headerRow = document.createElement('tr');
+           for (var key in jsonData[0]) {
+             var th = document.createElement('th');
+             th.textContent = key;
+             headerRow.appendChild(th);
+           }
+           thead.appendChild(headerRow);
+           table.appendChild(thead);
+         
+           // Create table body
+           var tbody = document.createElement('tbody');
+           jsonData.forEach(function (item) {
+             var row = document.createElement('tr');
+             for (var key in item) {
+               var td = document.createElement('td');
+               td.textContent = item[key];
+               row.appendChild(td);
+             }
+             tbody.appendChild(row);
+           });
+           table.appendChild(tbody);
+         
+           // Append the table to the container
+           var tableContainer = document.getElementById('jsonTableContainer');
+           tableContainer.innerHTML = '';
+           tableContainer.appendChild(table);
+         } catch (error) {
+           console.error('Error parsing JSON:', error);
+           // Handle the error, e.g., display an error message
+           var tableContainer = document.getElementById('jsonTableContainer');
+           tableContainer.innerHTML = '<p class="text-danger">Error parsing JSON</p>';
+         }
+         }
+      </script>
+   </body>
+</html>
